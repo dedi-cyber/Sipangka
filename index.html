@@ -1,0 +1,2036 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIPANGKA - Sistem Informasi Pelanggaran & Kasus Siswa (8 Modul)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        navy: {
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        
+        /* Print Styles for Formal Document Generation */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printable-letter, #printable-letter * {
+                visibility: visible;
+            }
+            #printable-letter {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                padding: 20px;
+                background: white;
+                color: black;
+                font-size: 11pt;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- TOP NAVBAR HEADER -->
+    <header class="bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 text-white shadow-xl sticky top-0 z-30 no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo & Brand Title -->
+                <div class="flex items-center space-x-3">
+                    <div class="bg-emerald-500/20 p-2 rounded-xl border border-emerald-400/30">
+                        <i class="fa-solid fa-shield-halved text-emerald-400 text-2xl"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-xl tracking-tight text-white">SIPANGKA</span>
+                            <span class="text-[10px] bg-emerald-500/30 text-emerald-300 font-semibold px-2 py-0.5 rounded border border-emerald-400/20">8 MODUL v3.0</span>
+                        </div>
+                        <p class="text-xs text-slate-300 hidden sm:block">Sistem Informasi Pelanggaran, Poin & Deteksi Dini Siswa</p>
+                    </div>
+                </div>
+
+                <!-- User Role Indicator & Switcher Button -->
+                <div class="flex items-center space-x-3 sm:space-x-4">
+                    <div class="flex items-center bg-slate-800/90 rounded-lg p-1 border border-slate-700">
+                        <div class="px-2.5 py-1 rounded text-xs font-semibold flex items-center gap-1.5" id="current-role-badge">
+                            <!-- Injected by JS -->
+                        </div>
+                        <button onclick="openRoleModal()" class="ml-1 px-2.5 py-1 bg-slate-700 hover:bg-slate-600 text-xs text-slate-200 rounded font-medium transition flex items-center gap-1">
+                            <i class="fa-solid fa-right-left text-[10px]"></i>
+                            <span class="hidden sm:inline">Ganti Peran</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- NAVIGATION TABS FOR 8 MODULES -->
+    <nav class="bg-white border-b border-slate-200 shadow-sm sticky top-16 z-20 no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex space-x-1 sm:space-x-2 overflow-x-auto custom-scrollbar py-2">
+                
+                <!-- Modul 1: Dashboard -->
+                <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="nav-tab active-tab flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition whitespace-nowrap">
+                    <i class="fa-solid fa-chart-pie text-emerald-600"></i> 1. Dashboard
+                </button>
+
+                <!-- Modul 2: Deteksi Dini (EWS) -->
+                <button onclick="switchTab('ews')" id="tab-btn-ews" class="nav-tab flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition whitespace-nowrap relative">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-500"></i> 2. Deteksi Dini (EWS)
+                    <span id="ews-badge-count" class="hidden ml-1 px-1.5 py-0.2 bg-rose-600 text-white text-[10px] font-bold rounded-full">0</span>
+                </button>
+
+                <!-- Modul 3: Poin Pelanggaran Catalog -->
+                <button onclick="switchTab('katalog')" id="tab-btn-katalog" class="nav-tab flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition whitespace-nowrap">
+                    <i class="fa-solid fa-book-bookmark text-indigo-600"></i> 3. Poin Pelanggaran
+                </button>
+
+                <!-- Modul 4: Input Laporan -->
+                <button onclick="switchTab('input')" id="tab-btn-input" class="nav-tab flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition whitespace-nowrap">
+                    <i class="fa-solid fa-file-circle-plus text-teal-600"></i> 4. Input Kejadian
+                </button>
+
+                <!-- Modul 5: Buku Rekap / Data Kasus -->
+                <button onclick="switchTab('data')" id="tab-btn-data" class="nav-tab flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition whitespace-nowrap">
+                    <i class="fa-solid fa-folder-open text-blue-600"></i> 5. Database Kasus
+                </button>
+
+                <!-- Modul 6: Poin Kebaikan & Restoratif -->
+                <button onclick="switchTab('kebaikan')" id="tab-btn-kebaikan" class="nav-tab flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition whitespace-nowrap">
+                    <i class="fa-solid fa-hand-holding-heart text-pink-600"></i> 6. Poin Kebaikan
+                </button>
+
+                <!-- Modul 7: Sanksi & Surat Resmi -->
+                <button onclick="switchTab('surat')" id="tab-btn-surat" class="nav-tab flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition whitespace-nowrap">
+                    <i class="fa-solid fa-print text-purple-600"></i> 7. Cetak SP / Surat
+                </button>
+
+                <!-- Modul 8: Pengaturan & Code -->
+                <button onclick="switchTab('pengaturan')" id="tab-btn-pengaturan" class="nav-tab flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition whitespace-nowrap">
+                    <i class="fa-solid fa-gear text-slate-600"></i> 8. Apps Script & Role
+                </button>
+
+                <!-- Modul 9: SOP TPPK & Bullying -->
+                <button onclick="switchTab('sop')" id="tab-btn-sop" class="nav-tab flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition whitespace-nowrap">
+                    <i class="fa-solid fa-file-shield text-red-600"></i> 9. SOP TPPK & Bullying
+                </button>
+
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTAINER -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 no-print">
+
+        <!-- ========================================== -->
+        <!-- MODUL 1: DASHBOARD SEKOLAH / MADRASAH -->
+        <!-- ========================================== -->
+        <section id="tab-dashboard" class="tab-content space-y-6">
+            <!-- Header Banner -->
+            <div class="bg-gradient-to-r from-slate-900 via-teal-950 to-emerald-900 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
+                <div class="absolute right-0 top-0 bottom-0 opacity-10 flex items-center pr-10 pointer-events-none">
+                    <i class="fa-solid fa-chart-line text-[180px]"></i>
+                </div>
+                <div class="relative z-10 max-w-3xl">
+                    <span class="bg-emerald-500/20 text-emerald-300 text-xs px-3 py-1 rounded-full border border-emerald-400/30 font-semibold tracking-wider uppercase">Modul 1 • Eksekutif Dashboard</span>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold mt-2 tracking-tight">Ringkasan Ketertiban Sekolah & Madrasah</h1>
+                    <p class="text-slate-300 text-xs sm:text-sm mt-1">Pemantauan akumulasi poin pelanggaran, sebaran status penanganan BK, dan peringkat 10 murid dengan atensi tertinggi.</p>
+                </div>
+            </div>
+
+            <!-- METRIC CARDS -->
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between text-slate-500 text-xs font-semibold mb-1">
+                        <span>TOTAL SISWA</span>
+                        <i class="fa-solid fa-users text-blue-500"></i>
+                    </div>
+                    <div class="text-2xl font-bold text-slate-800" id="dash-total-siswa">850</div>
+                    <p class="text-[11px] text-slate-400 mt-1">Siswa Terdaftar</p>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between text-slate-500 text-xs font-semibold mb-1">
+                        <span>TOTAL KEJADIAN</span>
+                        <i class="fa-solid fa-folder-open text-amber-500"></i>
+                    </div>
+                    <div class="text-2xl font-bold text-amber-600" id="dash-total-kejadian">0</div>
+                    <p class="text-[11px] text-slate-400 mt-1">Laporan Tercatat</p>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between text-slate-500 text-xs font-semibold mb-1">
+                        <span>TOTAL AKUMULASI POIN</span>
+                        <i class="fa-solid fa-fire text-rose-500"></i>
+                    </div>
+                    <div class="text-2xl font-bold text-rose-600" id="dash-total-poin">0</div>
+                    <p class="text-[11px] text-slate-400 mt-1">Poin Pelanggaran</p>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between text-slate-500 text-xs font-semibold mb-1">
+                        <span>DALAM PROSES BK</span>
+                        <i class="fa-solid fa-spinner text-indigo-500"></i>
+                    </div>
+                    <div class="text-2xl font-bold text-indigo-600" id="dash-total-proses">0</div>
+                    <p class="text-[11px] text-slate-400 mt-1">Perlu Penanganan</p>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm col-span-2 md:col-span-1">
+                    <div class="flex items-center justify-between text-slate-500 text-xs font-semibold mb-1">
+                        <span>KASUS SELESAI</span>
+                        <i class="fa-solid fa-circle-check text-emerald-500"></i>
+                    </div>
+                    <div class="text-2xl font-bold text-emerald-600" id="dash-total-selesai">0</div>
+                    <p class="text-[11px] text-slate-400 mt-1">Tuntas Diselesaikan</p>
+                </div>
+            </div>
+
+            <!-- CHARTS & TOP 10 MURID TABLE -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Grafik Sebaran Status & Keparahan -->
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                    <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2 border-b pb-3">
+                        <i class="fa-solid fa-chart-pie text-emerald-600"></i> Sebaran Status Penanganan
+                    </h3>
+                    <div class="h-56 relative flex items-center justify-center">
+                        <canvas id="chartStatusSebaran"></canvas>
+                    </div>
+                </div>
+
+                <!-- Grafik Tren Poin Pelanggaran -->
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                    <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2 border-b pb-3">
+                        <i class="fa-solid fa-chart-line text-blue-600"></i> Tren Poin & Kasus Bulanan
+                    </h3>
+                    <div class="h-56 relative">
+                        <canvas id="chartTrenBulanan"></canvas>
+                    </div>
+                </div>
+
+                <!-- Grafik Top Categories -->
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                    <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2 border-b pb-3">
+                        <i class="fa-solid fa-chart-bar text-purple-600"></i> Kategori Pelanggaran Terbanyak
+                    </h3>
+                    <div class="h-56 relative">
+                        <canvas id="chartKategoriTerbanyak"></canvas>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- TABEL 10 MURID POIN TERTINGGI -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
+                <div class="flex items-center justify-between border-b pb-3">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-arrow-trend-up text-rose-600"></i>
+                            10 Murid dengan Akumulasi Poin Pelanggaran Tertinggi
+                        </h3>
+                        <p class="text-xs text-slate-500">Prioritas khusus untuk pendampingan Guru BK dan Wali Kelas.</p>
+                    </div>
+                    <span class="text-xs bg-rose-50 text-rose-700 font-bold px-2.5 py-1 rounded border border-rose-200">
+                        Atensi Khusus
+                    </span>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead class="bg-slate-100 text-slate-700 uppercase font-bold tracking-wider border-b">
+                            <tr>
+                                <th class="py-3 px-3">Peringkat</th>
+                                <th class="py-3 px-3">Nama Murid</th>
+                                <th class="py-3 px-3">Kelas</th>
+                                <th class="py-3 px-3">NISN</th>
+                                <th class="py-3 px-3 text-center">Total Poin Akumulasi</th>
+                                <th class="py-3 px-3 text-center">Status EWS</th>
+                                <th class="py-3 px-3 text-center">Aksi Lanjutan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="top10-table-body" class="divide-y divide-slate-100 text-slate-800">
+                            <!-- Injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- MODUL 2: DETEKSI DINI (EARLY WARNING SYSTEM) -->
+        <!-- ========================================== -->
+        <section id="tab-ews" class="tab-content hidden space-y-6">
+            <div class="bg-gradient-to-r from-amber-600 via-orange-600 to-red-700 rounded-2xl p-6 text-white shadow-md flex items-center justify-between">
+                <div>
+                    <span class="bg-black/20 text-white text-xs px-3 py-1 rounded-full font-semibold uppercase tracking-wider">Modul 2 • Sistem Peringatan Dini</span>
+                    <h2 class="text-2xl font-extrabold mt-1">Deteksi Dini Perilaku & Lonjakan Poin Siswa (14 Hari)</h2>
+                    <p class="text-xs sm:text-sm text-orange-100 mt-1 max-w-2xl">
+                        Aplikasi otomatis memindai siswa yang mengalami peningkatan poin tajam dalam 14 hari terakhir untuk dikategorikan sebagai <strong class="underline">SIAGA (Alert)</strong> atau <strong class="underline">WASPADA (Warning)</strong>.
+                    </p>
+                </div>
+                <i class="fa-solid fa-triangle-exclamation text-7xl opacity-20 hidden md:block"></i>
+            </div>
+
+            <!-- EWS Legend Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-red-50 border-2 border-red-300 p-4 rounded-xl flex items-start gap-3">
+                    <div class="bg-red-600 text-white p-2.5 rounded-lg text-lg font-bold">
+                        <i class="fa-solid fa-bell"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-red-900 text-sm">Kategori SIAGA (Sangat Kritis)</h4>
+                        <p class="text-xs text-red-700 mt-0.5">Siswa mengalami kenaikan &ge; 50 Poin dalam 14 hari ATAU akumulasi poin &ge; 75 Poin. Memerlukan pemanggilan orang tua & rapat pleno BK segera.</p>
+                    </div>
+                </div>
+
+                <div class="bg-amber-50 border-2 border-amber-300 p-4 rounded-xl flex items-start gap-3">
+                    <div class="bg-amber-500 text-white p-2.5 rounded-lg text-lg font-bold">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-amber-900 text-sm">Kategori WASPADA (Atensi Sedang)</h4>
+                        <p class="text-xs text-amber-700 mt-0.5">Siswa mengalami kenaikan &ge; 25 Poin dalam 14 hari ATAU akumulasi poin &ge; 45 Poin. Memerlukan konseling individu oleh Guru BK / Wali Kelas.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EWS Alerted Student List -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
+                <h3 class="text-base font-bold text-slate-800 flex items-center justify-between border-b pb-3">
+                    <span class="flex items-center gap-2">
+                        <i class="fa-solid fa-user-ninja text-rose-600"></i>
+                        Daftar Murid Terdeteksi EWS (Perlu Konseling Segera)
+                    </span>
+                    <span class="text-xs text-slate-500 font-normal">Diperbarui berdasarkan riwayat 14 hari</span>
+                </h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="ews-cards-container">
+                    <!-- Injected by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- MODUL 3: POIN PELANGGARAN (KATALOG 32 JENIS) -->
+        <!-- ========================================== -->
+        <section id="tab-katalog" class="tab-content hidden space-y-6">
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-book-bookmark text-indigo-600"></i>
+                        Katalog Master 32 Poin Pelanggaran Tata Tertib
+                    </h2>
+                    <p class="text-xs text-slate-500">Daftar kode, bobot poin, dan bobot tingkat keparahan sesuai aturan tata tertib sekolah/madrasah.</p>
+                </div>
+
+                <!-- Search Katalog -->
+                <div class="w-full md:w-80 relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-sm"></i>
+                    <input type="text" id="search-katalog" onkeyup="renderKatalogTable()" placeholder="Cari kode atau deskripsi pelanggaran..." class="w-full pl-9 pr-3 py-1.5 text-xs sm:text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                </div>
+            </div>
+
+            <!-- Table 32 Violations -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs sm:text-sm border-collapse">
+                        <thead class="bg-slate-100 text-slate-700 uppercase font-bold text-[11px] tracking-wider border-b">
+                            <tr>
+                                <th class="py-3 px-4">Kode</th>
+                                <th class="py-3 px-4">Kategori Utama</th>
+                                <th class="py-3 px-4">Bentuk Pelanggaran</th>
+                                <th class="py-3 px-4 text-center">Keparahan</th>
+                                <th class="py-3 px-4 text-center">Bobot Poin</th>
+                                <th class="py-3 px-4 text-center">Aksi Form</th>
+                            </tr>
+                        </thead>
+                        <tbody id="katalog-table-body" class="divide-y divide-slate-100 text-slate-800">
+                            <!-- Injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- MODUL 4: INPUT LAPORAN KEJADIAN -->
+        <!-- ========================================== -->
+        <section id="tab-input" class="tab-content hidden space-y-6">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 max-w-4xl mx-auto">
+                <div class="border-b border-slate-100 pb-4 mb-6 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-file-circle-plus text-teal-600"></i>
+                            Form Pelaporan Kejadian & Integrasi Poin Otomatis
+                        </h2>
+                        <p class="text-xs sm:text-sm text-slate-500 mt-1">Pilih jenis pelanggaran dari 32 master poin untuk mengakumulasi statistik siswa secara presisi.</p>
+                    </div>
+                    <span class="px-3 py-1 bg-teal-50 text-teal-700 text-xs font-semibold rounded-full border border-teal-200">
+                        Poin Otomatis
+                    </span>
+                </div>
+
+                <form id="form-kejadian" onsubmit="handleFormSubmit(event)" class="space-y-6">
+                    <!-- Section 1: Poin & Katalog Selection -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-teal-800 flex items-center justify-between">
+                            <span>1. Pilih Pelanggaran dari Master Kode</span>
+                            <i class="fa-solid fa-list-check"></i>
+                        </h3>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Jenis Pelanggaran (32 Pilihan Master) <span class="text-red-500">*</span></label>
+                            <select id="field-katalog-select" required onchange="onSelectKatalogItem()" class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none bg-white font-medium">
+                                <!-- Injected by JS -->
+                            </select>
+                        </div>
+
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
+                            <div>
+                                <span class="text-[11px] text-slate-500 block">Kategori:</span>
+                                <strong id="preview-kategori" class="text-xs text-slate-800">-</strong>
+                            </div>
+                            <div>
+                                <span class="text-[11px] text-slate-500 block">Keparahan:</span>
+                                <strong id="preview-keparahan" class="text-xs text-slate-800">-</strong>
+                            </div>
+                            <div>
+                                <span class="text-[11px] text-slate-500 block">Bobot Poin Ditambahkan:</span>
+                                <span id="preview-poin" class="text-sm font-extrabold text-rose-600">+0 POIN</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Waktu & Lokasi -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Tanggal & Waktu Kejadian <span class="text-red-500">*</span></label>
+                            <input type="datetime-local" id="field-waktu" required class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Lokasi Kejadian <span class="text-red-500">*</span></label>
+                            <input type="text" id="field-lokasi" placeholder="Misal: Kantin Belakang, Kelas VIII-B, Gerbang" required class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Subjek Pelaku & Korban -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Pelaku -->
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                            <h4 class="text-xs font-bold text-rose-700 uppercase flex items-center gap-1.5">
+                                <i class="fa-solid fa-user-ninja"></i> Identitas Murid Pelaku
+                            </h4>
+                            <div>
+                                <label class="block text-xs text-slate-600 mb-1">Nama Siswa Pelaku <span class="text-red-500">*</span></label>
+                                <input type="text" id="field-pelaku-nama" placeholder="Nama murid" required class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none bg-white">
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-xs text-slate-600 mb-1">Kelas <span class="text-red-500">*</span></label>
+                                    <input type="text" id="field-pelaku-kelas" placeholder="Misal: VII-A" required class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none bg-white">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-slate-600 mb-1">NISN / NIS</label>
+                                    <input type="text" id="field-pelaku-nisn" placeholder="Nomor Induk" class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none bg-white">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Korban (opsional jika perundungan) -->
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                            <h4 class="text-xs font-bold text-blue-700 uppercase flex items-center gap-1.5">
+                                <i class="fa-solid fa-user-shield"></i> Korban / Saksi (Jika Ada)
+                            </h4>
+                            <div>
+                                <label class="block text-xs text-slate-600 mb-1">Nama Korban</label>
+                                <input type="text" id="field-korban-nama" placeholder="Nama korban (jika perundungan)" class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none bg-white">
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-xs text-slate-600 mb-1">Kelas Korban</label>
+                                    <input type="text" id="field-korban-kelas" placeholder="Kelas" class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none bg-white">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-slate-600 mb-1">Dampak Korban</label>
+                                    <input type="text" id="field-korban-ket" placeholder="Misal: Trauma / Kerugian" class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none bg-white">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 4: Kronologi, Guru & Status -->
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Kronologi Peristiwa <span class="text-red-500">*</span></label>
+                            <textarea id="field-kronologi" rows="3" placeholder="Uraikan fakta kejadian secara objektif..." required class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Tindakan Pembinaan Awal Guru <span class="text-red-500">*</span></label>
+                            <textarea id="field-tindakan" rows="2" placeholder="Tindakan awal (peneguran, penahanan barang, atau rujukan BK)..." required class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none"></textarea>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Guru Pelapor / Penanggung Jawab <span class="text-red-500">*</span></label>
+                                <input type="text" id="field-guru" placeholder="Nama Guru S.Pd." required class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Status Penanganan Awal <span class="text-red-500">*</span></label>
+                                <select id="field-status" required class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none bg-white">
+                                    <option value="Proses Penyelidikan">Proses Penyelidikan</option>
+                                    <option value="Bimbingan BK">Bimbingan BK</option>
+                                    <option value="Pemanggilan Ortu">Pemanggilan Ortu</option>
+                                    <option value="Surat Peringatan">Surat Peringatan (SP)</option>
+                                    <option value="Selesai">Selesai / Tuntas</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="pt-4 border-t border-slate-100 flex justify-end gap-3">
+                        <button type="reset" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition">Reset</button>
+                        <button type="submit" class="px-6 py-2.5 bg-teal-600 hover:bg-teal-700 text-white text-xs sm:text-sm font-bold rounded-lg shadow-md transition flex items-center gap-2">
+                            <i class="fa-solid fa-paper-plane"></i> Simpan & Akumulasikan Poin Siswa
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- MODUL 5: BUKU REKAP & DATABASE KASUS -->
+        <!-- ========================================== -->
+        <section id="tab-data" class="tab-content hidden space-y-4">
+            <!-- Filter Toolbar -->
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-3 items-center justify-between">
+                <div class="relative w-full md:w-80">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-sm"></i>
+                    <input type="text" id="search-input" onkeyup="renderDataTable()" placeholder="Cari nama murid, kelas, kode..." class="w-full pl-9 pr-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                    <select id="filter-keparahan" onchange="renderDataTable()" class="px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none bg-white">
+                        <option value="ALL">Semua Keparahan</option>
+                        <option value="Ringan">Ringan</option>
+                        <option value="Sedang">Sedang</option>
+                        <option value="Berat">Berat</option>
+                    </select>
+
+                    <select id="filter-status" onchange="renderDataTable()" class="px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none bg-white">
+                        <option value="ALL">Semua Status</option>
+                        <option value="Proses Penyelidikan">Proses Penyelidikan</option>
+                        <option value="Bimbingan BK">Bimbingan BK</option>
+                        <option value="Pemanggilan Ortu">Pemanggilan Ortu</option>
+                        <option value="Surat Peringatan">Surat Peringatan</option>
+                        <option value="Selesai">Selesai</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Table Database -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs sm:text-sm border-collapse">
+                        <thead class="bg-slate-100 text-slate-700 uppercase font-bold text-[11px] tracking-wider border-b">
+                            <tr>
+                                <th class="py-3.5 px-4">Kode & Tanggal</th>
+                                <th class="py-3.5 px-4">Murid Pelaku</th>
+                                <th class="py-3.5 px-4">Bentuk Pelanggaran</th>
+                                <th class="py-3.5 px-4 text-center">Poin</th>
+                                <th class="py-3.5 px-4 text-center">Keparahan</th>
+                                <th class="py-3.5 px-4">Status Penanganan</th>
+                                <th class="py-3.5 px-4 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body" class="divide-y divide-slate-100 text-slate-700">
+                            <!-- Injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="table-empty" class="hidden p-8 text-center text-slate-500">
+                    <i class="fa-regular fa-folder-open text-4xl mb-2 text-slate-300"></i>
+                    <p class="text-xs sm:text-sm">Tidak ada catatan data kasus yang sesuai kriteria filter.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- MODUL 6: POIN KEBAIKAN & RESTORATIF (REWARD SYSTEM) -->
+        <!-- ========================================== -->
+        <section id="tab-kebaikan" class="tab-content hidden space-y-6">
+            <div class="bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-700 rounded-2xl p-6 text-white shadow-md flex items-center justify-between">
+                <div>
+                    <span class="bg-white/20 text-white text-xs px-3 py-1 rounded-full font-semibold uppercase tracking-wider">Modul 6 • Apresiasi & Restorasi Perilaku</span>
+                    <h2 class="text-2xl font-extrabold mt-1">Poin Kebaikan & Pengurangan Poin Pelanggaran</h2>
+                    <p class="text-xs sm:text-sm text-pink-100 mt-1 max-w-2xl">
+                        Sistem keadilan restoratif yang memberikan penghargaan poin kebaikan atas prestasi, kerja bakti (khidmah), dan perubahan perilaku positif untuk mereduksi akumulasi poin pelanggaran siswa.
+                    </p>
+                </div>
+                <i class="fa-solid fa-hand-holding-heart text-7xl opacity-20 hidden md:block"></i>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Form Input Poin Kebaikan -->
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                    <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2 border-b pb-3">
+                        <i class="fa-solid fa-circle-plus text-pink-600"></i> Form Tambah Poin Kebaikan
+                    </h3>
+                    <form id="form-kebaikan" onsubmit="handleKebaikanSubmit(event)" class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Siswa <span class="text-red-500">*</span></label>
+                            <input type="text" id="kebaikan-nama" required placeholder="Nama murid" class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Kelas <span class="text-red-500">*</span></label>
+                            <input type="text" id="kebaikan-kelas" required placeholder="Misal: VIII-A" class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Bentuk Kebaikan / Khidmah <span class="text-red-500">*</span></label>
+                            <select id="kebaikan-jenis" required class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:outline-none bg-white">
+                                <option value="Prestasi Akademik/Non-Akademik (-25 Poin)">Prestasi Akademik / Olahraga / Seni (-25 Poin)</option>
+                                <option value="Khidmah Kebersihan Musholla/Sekolah (-15 Poin)">Khidmah Kebersihan Lingkungan / Musholla (-15 Poin)</option>
+                                <option value="Petugas Upacara / Adiwiyata (-10 Poin)">Petugas Upacara / Kader Kesehatan (-10 Poin)</option>
+                                <option value="Sikap Jujur (Mengembalikan Barang Hilang) (-20 Poin)">Sikap Jujur / Mengembalikan Barang Hilang (-20 Poin)</option>
+                                <option value="Peningkatan Disiplin Shalat & Kehadiran (-10 Poin)">Peningkatan Kedisiplinan Kehadiran (-10 Poin)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Catatan Apresiasi Guru <span class="text-red-500">*</span></label>
+                            <textarea id="kebaikan-ket" rows="2" placeholder="Detail aksi positif siswa..." required class="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:outline-none"></textarea>
+                        </div>
+                        <button type="submit" class="w-full py-2.5 bg-pink-600 hover:bg-pink-700 text-white font-bold text-xs rounded-lg shadow transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-heart"></i> Simpan Poin Kebaikan
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Riwayat Poin Kebaikan -->
+                <div class="md:col-span-2 bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                    <h3 class="text-sm font-bold text-slate-800 flex items-center justify-between border-b pb-3">
+                        <span class="flex items-center gap-2">
+                            <i class="fa-solid fa-award text-amber-500"></i> Riwayat Apresiasi & Reduksi Poin
+                        </span>
+                        <span class="text-xs text-slate-500">Sistem Restoratif</span>
+                    </h3>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead class="bg-slate-100 text-slate-700 uppercase font-bold tracking-wider border-b">
+                                <tr>
+                                    <th class="py-3 px-3">Tanggal</th>
+                                    <th class="py-3 px-3">Siswa & Kelas</th>
+                                    <th class="py-3 px-3">Apresiasi Kebaikan</th>
+                                    <th class="py-3 px-3 text-center">Reduksi Poin</th>
+                                </tr>
+                            </thead>
+                            <tbody id="kebaikan-table-body" class="divide-y divide-slate-100 text-slate-700">
+                                <!-- Injected by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- MODUL 7: CETAK SP & SURAT RESMI (SANCTION ENGINE) -->
+        <!-- ========================================== -->
+        <section id="tab-surat" class="tab-content hidden space-y-6">
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-print text-purple-600 text-2xl"></i>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-800">Cetak Surat Peringatan (SP) & Berita Acara</h3>
+                        <p class="text-xs text-slate-500">Format dokumen formal otomatis berdasarkan tingkat poin siswa.</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 w-full md:w-auto">
+                    <select id="select-kasus-print" onchange="loadPrintPreview()" class="px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-lg focus:outline-none bg-white flex-1 md:w-80 font-medium">
+                        <!-- Injected by JS -->
+                    </select>
+                    <button onclick="window.print()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs sm:text-sm font-semibold flex items-center gap-2 shadow transition whitespace-nowrap">
+                        <i class="fa-solid fa-file-pdf"></i> Cetak / Simpan PDF
+                    </button>
+                </div>
+            </div>
+
+            <!-- OFFICIAL SURAT PRINT PREVIEW -->
+            <div class="bg-slate-200/70 p-4 sm:p-8 rounded-2xl flex justify-center overflow-x-auto">
+                <div id="printable-letter" class="bg-white w-full max-w-[800px] p-8 sm:p-12 shadow-xl border border-slate-300 text-slate-900 rounded-lg font-serif">
+                    <!-- KOP SURAT SEKOLAH -->
+                    <div class="border-b-4 border-double border-slate-900 pb-4 mb-6 text-center">
+                        <div class="flex items-center justify-between">
+                            <div class="w-16 h-16 flex items-center justify-center border-2 border-slate-800 rounded-full text-slate-800 text-2xl font-bold font-sans">
+                                <i class="fa-solid fa-graduation-cap"></i>
+                            </div>
+                            <div class="flex-1 px-4">
+                                <h4 class="text-xs uppercase font-bold tracking-widest text-slate-600 font-sans">KEMENTERIAN AGAMA / DINAS PENDIDIKAN</h4>
+                                <h2 class="text-lg sm:text-xl font-bold tracking-wide text-slate-900 uppercase font-sans">MADRASAH / SEKOLAH MODEL SIPANGKA</h2>
+                                <p class="text-xs text-slate-600 font-sans mt-0.5">Jl. Pendidikan Utama No. 123, Kabupaten Agam, Sumatera Barat | Telp: (0752) 889900</p>
+                                <p class="text-[11px] text-slate-500 italic font-sans">Website: www.sipangka-sekolah.sch.id | Email: bk@sipangka-sekolah.sch.id</p>
+                            </div>
+                            <div class="w-16 h-16 flex items-center justify-center border-2 border-slate-800 rounded-full text-slate-800 text-2xl font-bold font-sans">
+                                <i class="fa-solid fa-shield-halved"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SURAT TITLE -->
+                    <div class="text-center mb-6 font-sans">
+                        <h3 class="text-base font-bold underline uppercase tracking-wider" id="print-jenis-surat">SURAT PERINGATAN & LAPORAN DISIPLIN SISWA</h3>
+                        <p class="text-xs text-slate-600 mt-1">Nomor: <span id="print-nomor-surat">421.2/BK-SP/2026/001</span></p>
+                    </div>
+
+                    <!-- BODY DOKUMEN -->
+                    <div id="print-body-content" class="space-y-4 text-xs sm:text-sm font-sans leading-relaxed text-slate-800">
+                        <!-- Injected by JS -->
+                    </div>
+
+                    <!-- SIGNATURE BLOCK -->
+                    <div class="mt-12 pt-6 font-sans text-xs">
+                        <p class="text-right mb-8">Dikeluarkan di: Agam<br>Pada Tanggal: <span id="print-tgl-surat">-</span></p>
+                        <div class="grid grid-cols-3 gap-4 text-center">
+                            <div>
+                                <p class="font-semibold mb-14">Guru Pelapor / Wali Kelas,</p>
+                                <p class="font-bold underline" id="print-nama-guru">( ........................................ )</p>
+                                <p class="text-[10px] text-slate-500">NIP. -</p>
+                            </div>
+                            <div>
+                                <p class="font-semibold mb-14">Guru Bimbingan Konseling,</p>
+                                <p class="font-bold underline">( Dra. Hj. Nuraini, M.Pd. )</p>
+                                <p class="text-[10px] text-slate-500">NIP. 19820412 200604 2 003</p>
+                            </div>
+                            <div>
+                                <p class="font-semibold mb-14">Mengetahui,<br>Kepala Sekolah / Madrasah</p>
+                                <p class="font-bold underline">( Dr. H. Ahmad Dahlan, M.Ag. )</p>
+                                <p class="text-[10px] text-slate-500">NIP. 19750815 200112 1 002</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- MODUL 8: APPS SCRIPT BACKEND & ROLE MANAGEMENT -->
+        <!-- ========================================== -->
+        <section id="tab-pengaturan" class="tab-content hidden space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Card Access Control Role -->
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                    <h3 class="text-base font-bold text-slate-800 flex items-center gap-2 border-b pb-3">
+                        <i class="fa-solid fa-user-shield text-emerald-600"></i> Pengaturan Peran & Hak Akses
+                    </h3>
+                    <p class="text-xs text-slate-600">Pilih mode peran pengguna untuk menguji fitur aplikasi:</p>
+                    
+                    <div class="space-y-3">
+                        <button onclick="setRoleDirect('guru')" id="role-card-guru" class="w-full p-3 border-2 rounded-xl text-left transition flex items-center justify-between">
+                            <div>
+                                <strong class="text-sm text-slate-800 block"><i class="fa-solid fa-chalkboard-user text-emerald-600 mr-1"></i> Mode Guru Piket / Wali Kelas</strong>
+                                <span class="text-xs text-slate-500">Akses input laporan, melihat katalog, dan cetak surat.</span>
+                            </div>
+                            <i id="role-check-guru" class="fa-solid fa-circle-check text-emerald-600 text-xl hidden"></i>
+                        </button>
+
+                        <button onclick="openRoleModal()" id="role-card-admin" class="w-full p-3 border-2 rounded-xl text-left transition flex items-center justify-between">
+                            <div>
+                                <strong class="text-sm text-slate-800 block"><i class="fa-solid fa-user-gear text-amber-500 mr-1"></i> Mode Admin / Guru BK (Full Access)</strong>
+                                <span class="text-xs text-slate-500">Akses penuh Dashboard, EWS, Edit Status, & Hapus Kasus. (Pass: Agam121)</span>
+                            </div>
+                            <i id="role-check-admin" class="fa-solid fa-circle-check text-emerald-600 text-xl hidden"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Backend Integration Apps Script Snippet -->
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                    <h3 class="text-base font-bold text-slate-800 flex items-center gap-2 border-b pb-3">
+                        <i class="fa-solid fa-code text-indigo-600"></i> Integrasi Google Sheets API (Apps Script)
+                    </h3>
+                    <p class="text-xs text-slate-600">
+                        Aplikasi ini dapat disinkronkan langsung dengan Google Sheets menggunakan Google Apps Script (`Code.gs`) yang tersedia di tab artifact.
+                    </p>
+                    <div class="bg-slate-900 text-slate-100 p-3 rounded-lg text-xs font-mono overflow-x-auto max-h-40 border border-slate-800">
+<code>// Kode Google Apps Script Aktif
+var SHEET_NAME = "DATA_SIPANGKA";
+var ADMIN_PASSWORD = "Agam121";
+
+function doGet(e) {
+  var cases = getAllCases();
+  return ContentService.createTextOutput(JSON.stringify(cases));
+}</code>
+                    </div>
+                    <button onclick="openAppsScriptModal()" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg shadow transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-copy"></i> Lihat Kode Lengkap Apps Script Backend
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- MODUL 9: DOKUMEN SOP PENANGANAN BULLYING & TPPK -->
+        <!-- ========================================== -->
+        <section id="tab-sop" class="tab-content hidden space-y-6">
+            <!-- SOP Header Card -->
+            <div class="bg-gradient-to-r from-red-900 via-rose-900 to-slate-900 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
+                <div class="absolute right-0 top-0 bottom-0 opacity-10 flex items-center pr-10 pointer-events-none">
+                    <i class="fa-solid fa-file-shield text-[180px]"></i>
+                </div>
+                <div class="relative z-10 max-w-4xl space-y-2">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="bg-red-500/30 text-red-200 text-xs px-3 py-1 rounded-full border border-red-400/30 font-semibold tracking-wider uppercase">Modul 9 • Dokumen Resmi TPPK</span>
+                        <span class="bg-emerald-500/30 text-emerald-200 text-xs px-3 py-1 rounded-full border border-emerald-400/30 font-semibold">Permendikbudristek No. 46/2023</span>
+                    </div>
+                    <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight">DOKUMEN STANDAR OPERASIONAL PROSEDUR (SOP)</h1>
+                    <p class="text-xs sm:text-sm text-slate-200">Penanganan Kasus Perundungan (Bullying) dan Tindak Kekerasan di Satuan Pendidikan / Madrasah</p>
+                </div>
+                <div class="mt-4 pt-4 border-t border-red-800/50 flex flex-wrap gap-2 justify-end no-print">
+                    <button onclick="window.print()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold shadow flex items-center gap-2 transition">
+                        <i class="fa-solid fa-print"></i> Cetak / Simpan PDF SOP
+                    </button>
+                </div>
+            </div>
+
+            <!-- SOP Document Layout -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-10 space-y-8 text-slate-800">
+                
+                <!-- 1. TUJUAN DAN RUANG LINGKUP -->
+                <div class="space-y-3">
+                    <div class="flex items-center gap-2 border-b pb-2">
+                        <span class="w-7 h-7 bg-red-100 text-red-800 rounded-lg flex items-center justify-center font-bold text-xs">1</span>
+                        <h3 class="font-bold text-slate-900 text-base">TUJUAN DAN RUANG LINGKUP</h3>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm">
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-1">
+                            <strong class="text-red-700 block flex items-center gap-1.5"><i class="fa-solid fa-bullseye"></i> Tujuan Prosedur:</strong>
+                            <p class="text-slate-600 leading-relaxed">
+                                Memastikan penanganan kasus perundungan (bullying) dilakukan secara cepat, terukur, adil, transparan, serta mengedepankan hak perlindungan anak, keselamatan emosional korban, dan edukasi restoratif (restorative justice).
+                            </p>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-1">
+                            <strong class="text-indigo-700 block flex items-center gap-1.5"><i class="fa-solid fa-globe"></i> Ruang Lingkup:</strong>
+                            <p class="text-slate-600 leading-relaxed">
+                                SOP ini berlaku untuk seluruh warga sekolah (siswa, guru, tenaga kependidikan) di dalam lingkungan sekolah maupun kegiatan sekolah di luar kampus, mencakup bentuk perundungan fisik, verbal, relasional, siber (cyberbullying), hingga tindak pidana.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="bg-amber-50 p-3.5 rounded-xl border border-amber-200 text-xs text-amber-900 flex items-start gap-2">
+                        <i class="fa-solid fa-scale-balanced text-amber-600 text-sm mt-0.5"></i>
+                        <div>
+                            <strong>Landasan Hukum Utama:</strong> Permendikbudristek No. 46 Tahun 2023 tentang Pencegahan dan Penanganan Kekerasan di Lingkungan Satuan Pendidikan (PPKSP), UU No. 35 Tahun 2014 jo. UU No. 17 Tahun 2016 tentang Perlindungan Anak, serta UU No. 11 Tahun 2012 tentang Sistem Peradilan Pidana Anak (SPPA).
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. STRUKTUR TPPK -->
+                <div class="space-y-3">
+                    <div class="flex items-center gap-2 border-b pb-2">
+                        <span class="w-7 h-7 bg-red-100 text-red-800 rounded-lg flex items-center justify-center font-bold text-xs">2</span>
+                        <h3 class="font-bold text-slate-900 text-base">TIM PENCEGAHAN DAN PENANGANAN KEKERASAN (TPPK)</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs sm:text-sm border-collapse border border-slate-200 rounded-lg">
+                            <thead class="bg-slate-100 text-slate-800 uppercase font-bold border-b">
+                                <tr>
+                                    <th class="py-3 px-4 w-1/4 border-r">Peran / Jabatan</th>
+                                    <th class="py-3 px-4">Tanggung Jawab Utama</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 text-slate-700">
+                                <tr>
+                                    <td class="py-3 px-4 font-bold border-r bg-slate-50 text-slate-900">Kepala Sekolah</td>
+                                    <td class="py-3 px-4">Penanggung jawab akhir, penandatangan keputusan sanksi berat/rujukan hukum, dan pengambil kebijakan tingkat sekolah.</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4 font-bold border-r bg-slate-50 text-slate-900">Ketua TPPK / Guru BK</td>
+                                    <td class="py-3 px-4">Menerima laporan, memimpin investigasi, mengkoordinasikan konseling, mediasi restoratif, dan asesmen kondisi emosional korban.</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4 font-bold border-r bg-slate-50 text-slate-900">Wali Kelas / Guru MP</td>
+                                    <td class="py-3 px-4">Petugas deteksi awal, pencatat laporan kejadian pertama, pemantau perubahan perilaku harian siswa di kelas.</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4 font-bold border-r bg-slate-50 text-slate-900">Orang Tua / Wali</td>
+                                    <td class="py-3 px-4">Mitra pendampingan siswa dalam proses pembinaan dan pemulihan psikologis di rumah.</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4 font-bold border-r bg-slate-50 text-slate-900">Pihak Eksternal Terkait</td>
+                                    <td class="py-3 px-4">Dinas Pendidikan, Unit PPA Kepolisian (Polda/Polres), Dinas Sosial (P2TP2A), serta Layanan Psikolog/Kesehatan.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 3. KLASIFIKASI KATEGORI DAN TINGKATAN KASUS -->
+                <div class="space-y-3">
+                    <div class="flex items-center gap-2 border-b pb-2">
+                        <span class="w-7 h-7 bg-red-100 text-red-800 rounded-lg flex items-center justify-center font-bold text-xs">3</span>
+                        <h3 class="font-bold text-slate-900 text-base">KLASIFIKASI KATEGORI DAN TINGKATAN KASUS</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs sm:text-sm border-collapse border border-slate-200">
+                            <thead class="bg-slate-100 text-slate-800 uppercase font-bold border-b">
+                                <tr>
+                                    <th class="py-3 px-3 w-28 border-r text-center">Tingkat Kasus</th>
+                                    <th class="py-3 px-4 border-r">Indikator Perilaku / Bentuk Tindakan</th>
+                                    <th class="py-3 px-4">Alur Penanganan Utama</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 text-slate-700">
+                                <tr>
+                                    <td class="py-3 px-3 border-r text-center font-bold bg-emerald-50 text-emerald-800">Ringan</td>
+                                    <td class="py-3 px-4 border-r">Ejekan/panggilan nama yang tidak disukai, sindiran halus, pemusuhan sementara tanpa intimidasi masif, dorongan fisik ringan tanpa cidera.</td>
+                                    <td class="py-3 px-4">Mediasi internal oleh Wali Kelas & Guru BK, penyelesaian restoratif, teguran lisan.</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-3 border-r text-center font-bold bg-amber-50 text-amber-800">Sedang</td>
+                                    <td class="py-3 px-4 border-r">Perundungan verbal/siber berulang (mocking, body shaming), pengucilan sistematis oleh kelompok, perusak barang milik korban, dorongan/pukulan fisik ringan berulang.</td>
+                                    <td class="py-3 px-4">Penanganan oleh TPPK & Guru BK, konseling terstruktur, pemanggilan orang tua kedua belah pihak, Surat Peringatan I/II.</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-3 border-r text-center font-bold bg-rose-50 text-rose-800">Berat</td>
+                                    <td class="py-3 px-4 border-r">Penganiayaan fisik berulang yang menyebabkan memar/luka ringan, intimidasi masif, pemerasan/pajak liar berulang, cyberbullying berat (doxing, penyebaran rumor/foto pribadi), pelecehan verbal-seksual.</td>
+                                    <td class="py-3 px-4">Rapat Pleno TPPK dan Kepala Sekolah, pendampingan psikolog, Surat Peringatan Terakhir (SP III), skorsing terarah, keterlibatan Dinas Pendidikan.</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-3 border-r text-center font-bold bg-red-900 text-white">Tindak Pidana</td>
+                                    <td class="py-3 px-4 border-r">Kekerasan fisik berat (pengeroyokan, cidera permanen), pelecehan/kekerasan seksual, pengancaman nyawa/dengan senjata, pemerasan tingkat tinggi, penyebaran konten asusila (UU ITE).</td>
+                                    <td class="py-3 px-4">Pengamanan korban segera, koordinasi langsung dengan Unit PPA Kepolisian & Dinas Sosial, pendampingan hukum dan psikologis.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 4. ALUR PROSEDUR PENANGANAN BERJENJANG -->
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2 border-b pb-2">
+                        <span class="w-7 h-7 bg-red-100 text-red-800 rounded-lg flex items-center justify-center font-bold text-xs">4</span>
+                        <h3 class="font-bold text-slate-900 text-base">ALUR PROSEDUR PENANGANAN BERJENJANG</h3>
+                    </div>
+
+                    <!-- Flow Diagram Box -->
+                    <div class="bg-slate-900 text-white p-5 rounded-xl font-mono text-xs overflow-x-auto space-y-3 shadow-inner">
+                        <div class="text-amber-400 font-bold border-b border-slate-700 pb-2">DIAGRAM ALUR PROSEDUR TPPK</div>
+                        <div class="whitespace-pre leading-relaxed text-slate-200">
+[Laporan / Deteksi Awal] ──► [Pengamanan Korban & Asesmen (1x24 Jam)]
+                                       │
+                                       ▼
+                     [Investigasi & Verifikasi Bukti (TPPK)]
+                                       │
+     ┌─────────────────────────────────┼─────────────────────────────────┐
+     ▼                                 ▼                                 ▼
+[Tingkat Ringan]               [Tingkat Sedang]               [Tingkat Berat / Pidana]
+ ├─ Mediasi Restoratif          ├─ Konseling Terstruktur       ├─ Rapat Pleno TPPK & Kepsek
+ ├─ Konseling Internal          ├─ Pemanggilan Ortu            ├─ Sanksi Administratif / SP3
+ └─ Kesepakatan Damai           ├─ SP I / II                   ├─ Rujukan Psikolog / Dinsos
+                                └─ Rencana Pemulihan           └─ Pelaporan Unit PPA Polres
+                        </div>
+                    </div>
+
+                    <!-- Tahap 1 & 2 -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm">
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+                            <h4 class="font-bold text-slate-900 text-xs uppercase tracking-wider text-red-700 flex items-center gap-1.5">
+                                <i class="fa-solid fa-clock-rotate-left"></i> Tahap 1: Penerimaan & Pengamanan (Maks 1x24 Jam)
+                            </h4>
+                            <ol class="list-decimal pl-4 space-y-1 text-slate-600">
+                                <li><strong>Penerimaan Laporan:</strong> Laporan masuk melalui box pengaduan, formulir daring rahasia, atau laporan langsung dari siswa, guru, maupun orang tua.</li>
+                                <li><strong>Pengamanan Korban:</strong> TPPK/Guru BK segera memisahkan korban dari pelaku untuk menjamin keselamatan fisik dan emosional korban.</li>
+                                <li><strong>Pertolongan Pertama:</strong> Jika terjadi trauma fisik/psikologis mendesak, korban langsung dirujuk ke UKS atau fasilitas kesehatan terdekat.</li>
+                            </ol>
+                        </div>
+
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+                            <h4 class="font-bold text-slate-900 text-xs uppercase tracking-wider text-indigo-700 flex items-center gap-1.5">
+                                <i class="fa-solid fa-[#magnifying-glass]"></i> Tahap 2: Investigasi & Verifikasi (Maks 2x24 Jam)
+                            </h4>
+                            <ol class="list-decimal pl-4 space-y-1 text-slate-600">
+                                <li><strong>Pengumpulan Bukti:</strong> TPPK mengumpulkan bukti pendukung (tangkap layar pesan, rekaman CCTV, saksi mata, atau bukti fisik).</li>
+                                <li><strong>Klarifikasi Terpisah:</strong> Meminta keterangan secara terpisah dari korban, saksi, dan terduga pelaku untuk menghindari intimidasi berulang.</li>
+                                <li><strong>Penetapan Status:</strong> TPPK menyimpulkan tingkat keparahan kasus (Ringan, Sedang, Berat, atau Tindak Pidana).</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <!-- Tahap 3 Intervensi -->
+                    <div class="space-y-3">
+                        <h4 class="font-bold text-slate-900 text-sm">Tahap 3: Pelaksanaan Intervensi Berdasarkan Tingkatan</h4>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm">
+                            <!-- Ringan -->
+                            <div class="border border-emerald-200 bg-emerald-50/40 p-4 rounded-xl space-y-2">
+                                <strong class="text-emerald-800 font-bold block border-b border-emerald-200 pb-1">A. Kasus Tingkat Ringan</strong>
+                                <ol class="list-decimal pl-4 space-y-1 text-slate-700">
+                                    <li>Wali Kelas dan Guru BK memfasilitasi dialog restoratif antara korban dan pelaku.</li>
+                                    <li>Pelaku membuat Surat Pernyataan Penyesalan dan janji tidak mengulangi tindakan.</li>
+                                    <li>Pelaku menyampaikan permohonan maaf yang diterima oleh korban secara sukarela.</li>
+                                    <li>Guru BK melakukan pemantauan berkala selama 2 minggu.</li>
+                                </ol>
+                            </div>
+
+                            <!-- Sedang -->
+                            <div class="border border-amber-200 bg-amber-50/40 p-4 rounded-xl space-y-2">
+                                <strong class="text-amber-800 font-bold block border-b border-amber-200 pb-1">B. Kasus Tingkat Sedang</strong>
+                                <ol class="list-decimal pl-4 space-y-1 text-slate-700">
+                                    <li>TPPK memanggil orang tua/wali dari kedua belah pihak secara terpisah, kemudian bersama jika memungkinkan.</li>
+                                    <li>Pelaku diberikan Surat Peringatan (SP I / SP II) dan penugasan edukatif yang membangun empati (misal: proyek kampanye anti-bullying).</li>
+                                    <li>Guru BK menyusun program konseling wajib minimal 4 sesi untuk pelaku dan sesi pemulihan untuk korban.</li>
+                                    <li>Dibuat Surat Perjanjian Tertulis berformat resmi yang ditandatangani siswa, orang tua, BK, dan Kepala Sekolah.</li>
+                                </ol>
+                            </div>
+
+                            <!-- Berat -->
+                            <div class="border border-rose-200 bg-rose-50/40 p-4 rounded-xl space-y-2">
+                                <strong class="text-rose-800 font-bold block border-b border-rose-200 pb-1">C. Kasus Tingkat Berat</strong>
+                                <ol class="list-decimal pl-4 space-y-1 text-slate-700">
+                                    <li>Kepala Sekolah menggelar Rapat Pleno TPPK untuk menentukan sanksi edukatif terberat sesuai aturan sekolah (misal: skorsing dengan pembelajaran mandiri terpantau dari rumah).</li>
+                                    <li>Sekolah merujuk korban dan/atau pelaku ke layanan psikolog/konselor profesional atau P2TP2A/Dinas Sosial.</li>
+                                    <li>Jika melibatkan kerugian material (perusakan/pemerasan), orang tua pelaku wajib melakukan penggantian atas kesepakatan bersama.</li>
+                                    <li>Evaluasi ketat dilakukan setiap minggu oleh TPPK.</li>
+                                </ol>
+                            </div>
+
+                            <!-- Pidana -->
+                            <div class="border border-red-300 bg-red-50 p-4 rounded-xl space-y-2">
+                                <strong class="text-red-900 font-bold block border-b border-red-300 pb-1">D. Penanganan Kasus Tindak Pidana</strong>
+                                <ol class="list-decimal pl-4 space-y-1 text-slate-800">
+                                    <li><strong>Langkah Darurat:</strong> Sekolah melaporkan insiden ke Dinas Pendidikan dan berkoordinasi langsung dengan Unit Pelayanan Perempuan dan Anak (PPA) Polres setempat.</li>
+                                    <li><strong>Perhitungan Hak Anak:</strong> Karena pelaku dan korban umumnya masih berusia anak (ABH), proses pendampingan mengacu pada UU SPPA (UU No. 11/2012) dengan mengedepankan prinsip kualifikasi restoratif dan diversi pidana anak.</li>
+                                    <li><strong>Pendampingan:</strong> Sekolah menyediakan pendampingan psikologis dan hukum (melalui LBH/P2TP2A) bagi korban.</li>
+                                    <li><strong>Status Pendidikan:</strong> Sekolah memastikan anak tetap mendapatkan hak akses pendidikan (pembelajaran jarak jauh atau pengalihan satuan pendidikan) sesuai ketentuan regulasi Perlindungan Anak.</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. PEMULIHAN KORBAN & RESTORATIVE JUSTICE -->
+                <div class="space-y-3">
+                    <div class="flex items-center gap-2 border-b pb-2">
+                        <span class="w-7 h-7 bg-red-100 text-red-800 rounded-lg flex items-center justify-center font-bold text-xs">5</span>
+                        <h3 class="font-bold text-slate-900 text-base">PEMULIHAN KORBAN DAN REHABILITASI LINGKUNGAN (RESTORATIVE JUSTICE)</h3>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs sm:text-sm">
+                        <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                            <strong class="text-emerald-700 font-bold block"><i class="fa-solid fa-heart-pulse"></i> Pemulihan Korban:</strong>
+                            <p class="text-slate-600">Menjamin korban mendapatkan asesmen kondisi emosional, garansi bebas dari risiko pembalasan (retaliation), serta penyesuaian akademis sementara jika mengalami trauma belajar.</p>
+                        </div>
+                        <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                            <strong class="text-purple-700 font-bold block"><i class="fa-solid fa-user-gear"></i> Rehabilitasi Pelaku:</strong>
+                            <p class="text-slate-600">Berfokus pada pengubahan pola perilaku bullying melalui program pengembangan empati, tanggung jawab moral, dan bimbingan konseling intensif.</p>
+                        </div>
+                        <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                            <strong class="text-blue-700 font-bold block"><i class="fa-solid fa-school"></i> Pemulihan Budaya Sekolah:</strong>
+                            <p class="text-slate-600">Wali kelas dan TPPK menyelenggarakan kegiatan refleksi dinamika kelompok di kelas terkait untuk memulihkan iklim sosial yang aman.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. KERAHASIAAN & INDIKATOR KEBERHASILAN (KPI) -->
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2 border-b pb-2">
+                        <span class="w-7 h-7 bg-red-100 text-red-800 rounded-lg flex items-center justify-center font-bold text-xs">6</span>
+                        <h3 class="font-bold text-slate-900 text-base">KERAHASIAAN DAN INDIKATOR KEBERHASILAN (KPI)</h3>
+                    </div>
+
+                    <div class="bg-rose-50 border border-rose-200 p-4 rounded-xl text-xs sm:text-sm space-y-1 text-rose-950">
+                        <strong class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-user-lock"></i> Prinsip Kerahasiaan Identitas:</strong>
+                        <p class="leading-relaxed">
+                            Seluruh identitas korban, pelaku anak, saksi, serta dokumen pemeriksaan bersifat rahasia negara/sekolah. Dilarang keras menyebarkan identitas atau rekaman kasus ke media sosial atau pihak yang tidak berwenang.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1">
+                            <strong class="text-slate-500 block text-[10px]">KPI 1: RESPON CEPAT</strong>
+                            <p class="font-bold text-slate-800 text-xs">Penanganan awal dilakukan &lt; 24 jam sejak laporan diterima.</p>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1">
+                            <strong class="text-slate-500 block text-[10px]">KPI 2: RESIDIVIS 0%</strong>
+                            <p class="font-bold text-slate-800 text-xs">Tidak ada pengulangan kasus oleh pelaku yang sama dlm 6 bulan.</p>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1">
+                            <strong class="text-slate-500 block text-[10px]">KPI 3: PEMULIHAN PSIKOLOGIS</strong>
+                            <p class="font-bold text-slate-800 text-xs">Korban merasa aman & aktif kembali mengikuti KBM normal.</p>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1">
+                            <strong class="text-slate-500 block text-[10px]">KPI 4: KELENGKAPAN BERKAS</strong>
+                            <p class="font-bold text-slate-800 text-xs">BAP internal, lembar konseling & surat kesepakatan terarsip rapi.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-white border-t border-slate-200 mt-auto py-4 text-center text-xs text-slate-500 no-print">
+        <p>© 2026 SIPANGKA - Sistem Informasi Pelanggaran 8 Modul Sekolah / Madrasah. <strong class="text-emerald-700">Dev. by D.E.A.</strong></p>
+    </footer>
+
+    <!-- MODAL ROLE AUTHENTICATION -->
+    <div id="modal-role" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
+            <div class="flex items-center justify-between pb-3 border-b">
+                <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                    <i class="fa-solid fa-user-shield text-emerald-600"></i> Verifikasi Peran Admin / BK
+                </h3>
+                <button onclick="closeRoleModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="py-4 space-y-3">
+                <p class="text-xs text-slate-600">Masukkan Password Admin untuk mengaktifkan Hak Akses Admin / BK:</p>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Password Admin (Default: Agam121)</label>
+                    <input type="password" id="input-admin-pass" placeholder="Password..." class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                    <p id="pass-error" class="text-xs text-rose-600 hidden font-medium mt-1">Password salah! Silakan coba lagi.</p>
+                </div>
+            </div>
+            <div class="pt-3 border-t flex justify-end gap-2">
+                <button onclick="closeRoleModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">Batal</button>
+                <button onclick="confirmAdminRole()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow">Login Admin</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DETAIL KASUS -->
+    <div id="modal-detail" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <div class="flex items-center justify-between pb-3 border-b">
+                <h3 class="font-bold text-slate-800 text-base" id="detail-kode">Detail Kasus</h3>
+                <button onclick="closeDetailModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="py-4 space-y-4 text-xs sm:text-sm text-slate-700" id="detail-content"></div>
+            <div class="pt-3 border-t flex justify-end">
+                <button onclick="closeDetailModal()" class="px-4 py-2 bg-slate-800 text-white text-xs font-bold rounded-lg">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL BACKEND CODE -->
+    <div id="modal-appsscript" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-2xl max-w-3xl w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <div class="flex items-center justify-between pb-3 border-b">
+                <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                    <i class="fa-solid fa-code text-indigo-600"></i> Code Apps Script (`Code.gs`)
+                </h3>
+                <button onclick="closeAppsScriptModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="py-4 space-y-3">
+                <pre class="bg-slate-900 text-slate-100 p-4 rounded-xl text-xs font-mono overflow-x-auto border border-slate-800"><code>// Apps Script backend code ready in artifacts...</code></pre>
+            </div>
+            <div class="pt-3 border-t flex justify-end">
+                <button onclick="closeAppsScriptModal()" class="px-4 py-2 bg-slate-800 text-white text-xs font-bold rounded-lg">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast-notif" class="fixed bottom-5 right-5 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
+        <span id="toast-msg" class="text-xs font-semibold">Pesan notifikasi</span>
+    </div>
+
+    <!-- APPLICATION LOGIC SCRIPT -->
+    <script>
+        // ========================================================
+        // MASTER DATA: 32 KATALOG POIN PELANGGARAN
+        // ========================================================
+        const MASTER_32_PELANGGARAN = [
+            // Kategori 1: Kerapian & Atribut (1-6)
+            { kode: "P-01", kat: "Kerapian & Atribut", nama: "Tidak memakai seragam sesuai ketentuan hari", poin: 5, keparahan: "Ringan" },
+            { kode: "P-02", kat: "Kerapian & Atribut", nama: "Tidak memakai atribut lengkap (lokasi, badge, dasi, sabuk)", poin: 5, keparahan: "Ringan" },
+            { kode: "P-03", kat: "Kerapian & Atribut", nama: "Rambut gondrong/tidak rapi bagi siswa laki-laki", poin: 10, keparahan: "Ringan" },
+            { kode: "P-04", kat: "Kerapian & Atribut", nama: "Memakai perhiasan/make-up berlebihan", poin: 10, keparahan: "Ringan" },
+            { kode: "P-05", kat: "Kerapian & Atribut", nama: "Memakai sepatu non-hitam / tidak sesuai aturan", poin: 5, keparahan: "Ringan" },
+            { kode: "P-06", kat: "Kerapian & Atribut", nama: "Mencoret-coret seragam atau sarana sekolah", poin: 15, keparahan: "Sedang" },
+
+            // Kategori 2: Kerajinan & Keterlambatan (7-12)
+            { kode: "P-07", kat: "Kerajinan & Kehadiran", nama: "Terlambat masuk sekolah (<15 menit)", poin: 5, keparahan: "Ringan" },
+            { kode: "P-08", kat: "Kerajinan & Kehadiran", nama: "Terlambat masuk sekolah (>15 menit)", poin: 10, keparahan: "Ringan" },
+            { kode: "P-09", kat: "Kerajinan & Kehadiran", nama: "Meninggalkan kelas tanpa izin saat Jam KBM", poin: 15, keparahan: "Sedang" },
+            { kode: "P-10", kat: "Kerajinan & Kehadiran", nama: "Membolos / tidak masuk sekolah tanpa keterangan (Alpa)", poin: 20, keparahan: "Sedang" },
+            { kode: "P-11", kat: "Kerajinan & Kehadiran", nama: "Tidak mengikuti kegiatan Shalat Berjamaah / Ekstrakulikuler Wajib", poin: 15, keparahan: "Sedang" },
+            { kode: "P-12", kat: "Kerajinan & Kehadiran", nama: "Lompat pagar / keluar gerbang sekolah tanpa izin", poin: 30, keparahan: "Sedang" },
+
+            // Kategori 3: Etika & Ketertiban (13-22)
+            { kode: "P-13", kat: "Etika & Ketertiban", nama: "Menggunakan HP saat KBM tanpa instruksi guru", poin: 15, keparahan: "Ringan" },
+            { kode: "P-14", kat: "Etika & Ketertiban", nama: "Makan/minum di dalam kelas saat jam pembelajaran", poin: 5, keparahan: "Ringan" },
+            { kode: "P-15", kat: "Etika & Ketertiban", nama: "Membawa kartu remi/domino/alat judi ke sekolah", poin: 25, keparahan: "Sedang" },
+            { kode: "P-16", kat: "Etika & Ketertiban", nama: "Membawa & menghisap rokok / vape di lingkungan sekolah", poin: 35, keparahan: "Sedang" },
+            { kode: "P-17", kat: "Etika & Ketertiban", nama: "Membawa & menghisap rokok/vape di luar sekolah memakai seragam", poin: 40, keparahan: "Sedang" },
+            { kode: "P-18", kat: "Etika & Ketertiban", nama: "Berbicara kotor / tidak sopan kepada sesama teman", poin: 10, keparahan: "Ringan" },
+            { kode: "P-19", kat: "Etika & Ketertiban", nama: "Bersikap tidak sopan / membangkang instruksi Guru/Staf", poin: 25, keparahan: "Sedang" },
+            { kode: "P-20", kat: "Etika & Ketertiban", nama: "Merusak fasilitas sekolah / merusak tanaman", poin: 25, keparahan: "Sedang" },
+            { kode: "P-21", kat: "Etika & Ketertiban", nama: "Membawa barang bermotor tanpa SIM / Knalpot Brong", poin: 20, keparahan: "Sedang" },
+            { kode: "P-22", kat: "Etika & Ketertiban", nama: "Membuat kegaduhan / kerusuhan di lingkungan madrasah", poin: 20, keparahan: "Sedang" },
+
+            // Kategori 4: Perundungan / Bullying (23-28)
+            { kode: "P-23", kat: "Perundungan (Bullying)", nama: "Ejekan verbal / Julukan fisik / Hinaan nama orang tua", poin: 20, keparahan: "Sedang" },
+            { kode: "P-24", kat: "Perundungan (Bullying)", nama: "Cyberbullying / Menghina teman di Medsos / Grup WA", poin: 30, keparahan: "Sedang" },
+            { kode: "P-25", kat: "Perundungan (Bullying)", nama: "Pengucilan sosial / Mengintimidasi teman secara berkelompok", poin: 30, keparahan: "Sedang" },
+            { kode: "P-26", kat: "Perundungan (Bullying)", nama: "Pemerasan uang saku / pemalakan paksa", poin: 40, keparahan: "Berat" },
+            { kode: "P-27", kat: "Perundungan (Bullying)", nama: "Kekerasan fisik (mendorong, menampar, memukul ringan)", poin: 45, keparahan: "Berat" },
+            { kode: "P-28", kat: "Perundungan (Bullying)", nama: "Pengeroyokan / Penganiayaan fisik berencana", poin: 75, keparahan: "Berat" },
+
+            // Kategori 5: Pelanggaran Berat & Moral (29-32)
+            { kode: "P-29", kat: "Pelanggaran Berat", nama: "Perkelahian antar pelajar / Tawuran sekolah", poin: 75, keparahan: "Berat" },
+            { kode: "P-30", kat: "Pelanggaran Berat", nama: "Membawa senjata tajam / Senjata berbahaya", poin: 80, keparahan: "Berat" },
+            { kode: "P-31", kat: "Pelanggaran Berat", nama: "Tindak pencurian / Mengambil barang orang lain", poin: 60, keparahan: "Berat" },
+            { kode: "P-32", kat: "Pelanggaran Berat", nama: "Membawa/mengonsumsi Miras, Narkoba, atau tindakan Asusila", poin: 100, keparahan: "Berat" }
+        ];
+
+        // INITIAL SAMPLE INCIDENTS
+        const INITIAL_CASES = [
+            {
+                id: "K-2026-001",
+                waktu: "2026-10-10T08:30",
+                kodePoin: "P-24",
+                jenis: "Cyberbullying / Menghina teman di Medsos / Grup WA",
+                kategori: "Perundungan (Bullying)",
+                poin: 30,
+                keparahan: "Sedang",
+                lokasi: "Grup WA Kelas & Area Sekolah",
+                pelakuNama: "Rian Hidayat",
+                pelakuKelas: "VIII-B",
+                pelakuNisn: "0082918231",
+                korbanNama: "Ahmad Zaki",
+                korbanKelas: "VIII-B",
+                korbanKet: "Merasa cemas & enggan sekolah",
+                kronologi: "Pelaku membuat stiker menghina korban dan menyebarkannya di grup WA kelas.",
+                tindakan: "Pemanggilan pelaku dan ortu oleh Guru BK.",
+                guru: "Dra. Nuraini",
+                status: "Pemanggilan Ortu",
+                createdAt: "2026-10-10T09:00:00Z"
+            },
+            {
+                id: "K-2026-002",
+                waktu: "2026-10-18T07:15",
+                kodePoin: "P-16",
+                jenis: "Membawa & menghisap rokok / vape di lingkungan sekolah",
+                kategori: "Etika & Ketertiban",
+                poin: 35,
+                keparahan: "Sedang",
+                lokasi: "Toilet Lantai 2",
+                pelakuNama: "Rian Hidayat",
+                pelakuKelas: "VIII-B",
+                pelakuNisn: "0082918231",
+                korbanNama: "",
+                korbanKelas: "",
+                korbanKet: "",
+                kronologi: "Kedapatan membawa vape di dalam tas dan menghisapnya di toilet.",
+                tindakan: "Penyitaan vape & konseling intensif BK.",
+                guru: "Budi Santoso, S.Pd.",
+                status: "Bimbingan BK",
+                createdAt: "2026-10-18T08:00:00Z"
+            },
+            {
+                id: "K-2026-003",
+                waktu: "2026-10-12T07:15",
+                kodePoin: "P-08",
+                jenis: "Terlambat masuk sekolah (>15 menit)",
+                kategori: "Kerajinan & Kehadiran",
+                poin: 10,
+                keparahan: "Ringan",
+                lokasi: "Gerbang Depan",
+                pelakuNama: "Fikri Maulana",
+                pelakuKelas: "IX-A",
+                pelakuNisn: "0071239812",
+                korbanNama: "",
+                korbanKelas: "",
+                korbanKet: "",
+                kronologi: "Siswa datang pukul 07.45 WIB saat gerbang sudah dikunci.",
+                tindakan: "Pencatatan piket dan pembersihan area halaman.",
+                guru: "Budi Santoso, S.Pd.",
+                status: "Selesai",
+                createdAt: "2026-10-12T07:30:00Z"
+            },
+            {
+                id: "K-2026-004",
+                waktu: "2026-10-15T10:15",
+                kodePoin: "P-26",
+                jenis: "Pemerasan uang saku / pemalakan paksa",
+                kategori: "Perundungan (Bullying)",
+                poin: 40,
+                keparahan: "Berat",
+                lokasi: "Kantin Belakang",
+                pelakuNama: "Aris Munandar",
+                pelakuKelas: "IX-B",
+                pelakuNisn: "0079988112",
+                korbanNama: "Ilham Ramadhan",
+                korbanKelas: "VII-A",
+                korbanKet: "Uang saku diminta paksa",
+                kronologi: "Mengancam adik kelas dan meminta uang saku harian.",
+                tindakan: "Pemanggilan Orang Tua dan Rapat Tim Ketertiban.",
+                guru: "H. Suryadi, S.Ag.",
+                status: "Pemanggilan Ortu",
+                createdAt: "2026-10-15T11:00:00Z"
+            }
+        ];
+
+        const INITIAL_KEBAIKAN = [
+            {
+                tgl: "2026-10-14",
+                nama: "Ahmad Zaki",
+                kelas: "VIII-B",
+                jenis: "Khidmah Kebersihan Musholla/Sekolah (-15 Poin)",
+                reduksi: 15,
+                ket: "Membantu merapikan mukena dan sajadah musholla sekolah."
+            }
+        ];
+
+        // GLOBAL APP STATE
+        let casesData = [];
+        let kebaikanData = [];
+        let currentRole = 'guru'; // 'guru' or 'admin'
+        
+        let chartStatusInstance = null;
+        let chartTrenInstance = null;
+        let chartKategoriInstance = null;
+
+        // ==========================================
+        // INITIALIZATION
+        // ==========================================
+        window.onload = function() {
+            loadLocalData();
+            updateRoleBadgeUI();
+            renderKatalogOptions();
+            renderKatalogTable();
+            renderDataTable();
+            renderKebaikanTable();
+            renderEWSModule();
+            renderDashboard();
+
+            // Default datetime field to current
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('field-waktu').value = now.toISOString().slice(0, 16);
+        };
+
+        function loadLocalData() {
+            const storedCases = localStorage.getItem('sipangka_8m_cases');
+            if (storedCases) {
+                try { casesData = JSON.parse(storedCases); } catch(e) { casesData = [...INITIAL_CASES]; }
+            } else {
+                casesData = [...INITIAL_CASES];
+                saveLocalData();
+            }
+
+            const storedKebaikan = localStorage.getItem('sipangka_8m_kebaikan');
+            if (storedKebaikan) {
+                try { kebaikanData = JSON.parse(storedKebaikan); } catch(e) { kebaikanData = [...INITIAL_KEBAIKAN]; }
+            } else {
+                kebaikanData = [...INITIAL_KEBAIKAN];
+                saveLocalData();
+            }
+        }
+
+        function saveLocalData() {
+            localStorage.setItem('sipangka_8m_cases', JSON.stringify(casesData));
+            localStorage.setItem('sipangka_8m_kebaikan', JSON.stringify(kebaikanData));
+        }
+
+        // ==========================================
+        // TAB NAVIGATION
+        // ==========================================
+        function switchTab(tabKey) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-tab').forEach(el => {
+                el.classList.remove('active-tab', 'bg-emerald-50', 'text-emerald-700');
+                el.classList.add('text-slate-600');
+            });
+
+            const targetContent = document.getElementById(`tab-${tabKey}`);
+            const targetBtn = document.getElementById(`tab-btn-${tabKey}`);
+
+            if (targetContent) targetContent.classList.remove('hidden');
+            if (targetBtn) targetBtn.classList.add('active-tab', 'bg-emerald-50', 'text-emerald-700');
+
+            if (tabKey === 'dashboard') renderDashboard();
+            if (tabKey === 'ews') renderEWSModule();
+            if (tabKey === 'data') renderDataTable();
+            if (tabKey === 'surat') populatePrintDropdown();
+        }
+
+        // ==========================================
+        // MODUL 2: DETEKSI DINI (EWS) ENGINE
+        // ==========================================
+        function calculateStudentAccumulatedPoints() {
+            const studentMap = {};
+
+            casesData.forEach(c => {
+                const key = `${c.pelakuNama} (${c.pelakuKelas})`;
+                if (!studentMap[key]) {
+                    studentMap[key] = {
+                        nama: c.pelakuNama,
+                        kelas: c.pelakuKelas,
+                        nisn: c.pelakuNisn || '-',
+                        totalPoin: 0,
+                        poin14Hari: 0,
+                        kasusCount: 0,
+                        lastCaseDate: c.waktu
+                    };
+                }
+
+                const pts = parseInt(c.poin || 0);
+                studentMap[key].totalPoin += pts;
+                studentMap[key].kasusCount += 1;
+
+                // Check if within last 14 days
+                const caseTime = new Date(c.waktu).getTime();
+                const fourteenDaysAgo = new Date().getTime() - (14 * 24 * 60 * 60 * 1000);
+                if (caseTime >= fourteenDaysAgo) {
+                    studentMap[key].poin14Hari += pts;
+                }
+            });
+
+            // Subtract positive points
+            kebaikanData.forEach(k => {
+                const key = `${k.nama} (${k.kelas})`;
+                if (studentMap[key]) {
+                    studentMap[key].totalPoin = Math.max(0, studentMap[key].totalPoin - k.reduksi);
+                }
+            });
+
+            return Object.values(studentMap);
+        }
+
+        function renderEWSModule() {
+            const students = calculateStudentAccumulatedPoints();
+            const container = document.getElementById('ews-cards-container');
+            const badgeCount = document.getElementById('ews-badge-count');
+
+            const ewsAlerts = [];
+
+            students.forEach(s => {
+                let statusEws = 'NORMAL';
+                if (s.poin14Hari >= 50 || s.totalPoin >= 75) {
+                    statusEws = 'SIAGA';
+                } else if (s.poin14Hari >= 25 || s.totalPoin >= 45) {
+                    statusEws = 'WASPADA';
+                }
+
+                if (statusEws !== 'NORMAL') {
+                    ewsAlerts.push({ ...s, statusEws });
+                }
+            });
+
+            if (ewsAlerts.length > 0) {
+                badgeCount.innerText = ewsAlerts.length;
+                badgeCount.classList.remove('hidden');
+            } else {
+                badgeCount.classList.add('hidden');
+            }
+
+            if (ewsAlerts.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full p-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-300">
+                        <i class="fa-solid fa-circle-check text-emerald-500 text-4xl mb-2"></i>
+                        <p class="text-sm font-bold text-slate-700">Lingkungan Sekolah Aman & Kondusif</p>
+                        <p class="text-xs text-slate-500">Tidak ada murid terdeteksi dalam tingkat lonjakan poin kritis 14 hari terakhir.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = ewsAlerts.map(item => {
+                const isSiaga = item.statusEws === 'SIAGA';
+                const cardBorder = isSiaga ? 'border-red-500 bg-red-50/40' : 'border-amber-400 bg-amber-50/40';
+                const badgeStyle = isSiaga ? 'bg-red-600 text-white' : 'bg-amber-500 text-white';
+
+                return `
+                    <div class="p-4 rounded-xl border-2 ${cardBorder} space-y-3 relative shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider ${badgeStyle}">
+                                Status ${item.statusEws}
+                            </span>
+                            <span class="text-xs text-slate-500 font-mono">${item.nisn}</span>
+                        </div>
+
+                        <div>
+                            <h4 class="font-bold text-slate-800 text-sm">${escapeHtml(item.nama)}</h4>
+                            <p class="text-xs text-slate-600">Kelas: <strong>${escapeHtml(item.kelas)}</strong></p>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 text-xs bg-white p-2.5 rounded-lg border">
+                            <div>
+                                <span class="text-slate-500 block text-[10px]">Poin 14 Hari:</span>
+                                <strong class="text-rose-600 font-extrabold">+${item.poin14Hari} Poin</strong>
+                            </div>
+                            <div>
+                                <span class="text-slate-500 block text-[10px]">Total Akumulasi:</span>
+                                <strong class="text-slate-800 font-extrabold">${item.totalPoin} Poin</strong>
+                            </div>
+                        </div>
+
+                        <div class="pt-1 flex items-center justify-between">
+                            <span class="text-[11px] text-slate-500">${item.kasusCount} Laporan Kasus</span>
+                            <button onclick="selectForPrintByStudent('${escapeHtml(item.nama)}')" class="px-3 py-1 bg-slate-800 text-white text-[11px] font-bold rounded hover:bg-slate-700 transition">
+                                <i class="fa-solid fa-print mr-1"></i> SP / Call Ortu
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ==========================================
+        // MODUL 1: DASHBOARD ANALYTICS & TOP 10 MURID
+        // ==========================================
+        function renderDashboard() {
+            const students = calculateStudentAccumulatedPoints();
+            
+            // Total Poin
+            const totalPoin = students.reduce((acc, s) => acc + s.totalPoin, 0);
+            const totalKejadian = casesData.length;
+            const totalProses = casesData.filter(c => c.status !== 'Selesai').length;
+            const totalSelesai = casesData.filter(c => c.status === 'Selesai').length;
+
+            document.getElementById('dash-total-kejadian').innerText = totalKejadian;
+            document.getElementById('dash-total-poin').innerText = totalPoin;
+            document.getElementById('dash-total-proses').innerText = totalProses;
+            document.getElementById('dash-total-selesai').innerText = totalSelesai;
+
+            // Render Top 10 Table
+            const sortedTop10 = students.sort((a, b) => b.totalPoin - a.totalPoin).slice(0, 10);
+            const top10Tbody = document.getElementById('top10-table-body');
+
+            top10Tbody.innerHTML = sortedTop10.map((s, idx) => {
+                let badgeEws = `<span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded">Aman</span>`;
+                if (s.poin14Hari >= 50 || s.totalPoin >= 75) {
+                    badgeEws = `<span class="bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">SIAGA</span>`;
+                } else if (s.poin14Hari >= 25 || s.totalPoin >= 45) {
+                    badgeEws = `<span class="bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded">WASPADA</span>`;
+                }
+
+                return `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-2.5 px-3 font-bold text-center text-slate-500">${idx + 1}</td>
+                        <td class="py-2.5 px-3 font-bold text-slate-800">${escapeHtml(s.nama)}</td>
+                        <td class="py-2.5 px-3">${escapeHtml(s.kelas)}</td>
+                        <td class="py-2.5 px-3 font-mono text-slate-500">${s.nisn}</td>
+                        <td class="py-2.5 px-3 text-center">
+                            <span class="text-xs font-black text-rose-600 bg-rose-50 px-2 py-1 rounded border border-rose-200">${s.totalPoin} POIN</span>
+                        </td>
+                        <td class="py-2.5 px-3 text-center">${badgeEws}</td>
+                        <td class="py-2.5 px-3 text-center">
+                            <button onclick="selectForPrintByStudent('${escapeHtml(s.nama)}')" class="px-2.5 py-1 bg-slate-800 text-white text-[11px] font-bold rounded hover:bg-slate-700">
+                                Action / SP
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Charts
+            renderCharts();
+        }
+
+        function renderCharts() {
+            // Chart Status
+            if (chartStatusInstance) chartStatusInstance.destroy();
+            const ctx1 = document.getElementById('chartStatusSebaran').getContext('2d');
+            chartStatusInstance = new Chart(ctx1, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Penyelidikan', 'Bimbingan BK', 'Pemanggilan Ortu', 'SP', 'Selesai'],
+                    datasets: [{
+                        data: [
+                            casesData.filter(c => c.status === 'Proses Penyelidikan').length,
+                            casesData.filter(c => c.status === 'Bimbingan BK').length,
+                            casesData.filter(c => c.status === 'Pemanggilan Ortu').length,
+                            casesData.filter(c => c.status === 'Surat Peringatan').length,
+                            casesData.filter(c => c.status === 'Selesai').length
+                        ],
+                        backgroundColor: ['#6366f1', '#3b82f6', '#f59e0b', '#ef4444', '#10b981']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } } }
+            });
+
+            // Chart Tren
+            if (chartTrenInstance) chartTrenInstance.destroy();
+            const ctx2 = document.getElementById('chartTrenBulanan').getContext('2d');
+            chartTrenInstance = new Chart(ctx2, {
+                type: 'line',
+                data: {
+                    labels: ['Jul', 'Agus', 'Sept', 'Okt', 'Nov', 'Des'],
+                    datasets: [{
+                        label: 'Poin Pelanggaran',
+                        data: [15, 30, 45, casesData.reduce((a,b)=>a+parseInt(b.poin||0), 0), 0, 0],
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+            });
+
+            // Chart Kategori
+            if (chartKategoriInstance) chartKategoriInstance.destroy();
+            const ctx3 = document.getElementById('chartKategoriTerbanyak').getContext('2d');
+            chartKategoriInstance = new Chart(ctx3, {
+                type: 'bar',
+                data: {
+                    labels: ['Kerapian', 'Kehadiran', 'Etika', 'Bullying', 'Berat'],
+                    datasets: [{
+                        data: [
+                            casesData.filter(c => c.kategori === 'Kerapian & Atribut').length,
+                            casesData.filter(c => c.kategori === 'Kerajinan & Kehadiran').length,
+                            casesData.filter(c => c.kategori === 'Etika & Ketertiban').length,
+                            casesData.filter(c => c.kategori === 'Perundungan (Bullying)').length,
+                            casesData.filter(c => c.kategori === 'Pelanggaran Berat').length
+                        ],
+                        backgroundColor: '#a855f7',
+                        borderRadius: 6
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        // ==========================================
+        // MODUL 3: KATALOG PELANGGARAN
+        // ==========================================
+        function renderKatalogOptions() {
+            const select = document.getElementById('field-katalog-select');
+            select.innerHTML = MASTER_32_PELANGGARAN.map(p => 
+                `<option value="${p.kode}">[${p.kode}] ${p.nama} (${p.poin} Poin - ${p.keparahan})</option>`
+            ).join('');
+
+            onSelectKatalogItem();
+        }
+
+        function onSelectKatalogItem() {
+            const kode = document.getElementById('field-katalog-select').value;
+            const item = MASTER_32_PELANGGARAN.find(p => p.kode === kode);
+
+            if (item) {
+                document.getElementById('preview-kategori').innerText = item.kat;
+                document.getElementById('preview-keparahan').innerText = item.keparahan;
+                document.getElementById('preview-poin').innerText = `+${item.poin} POIN`;
+            }
+        }
+
+        function renderKatalogTable() {
+            const tbody = document.getElementById('katalog-table-body');
+            const search = document.getElementById('search-katalog').value.toLowerCase();
+
+            const filtered = MASTER_32_PELANGGARAN.filter(p => 
+                p.kode.toLowerCase().includes(search) || 
+                p.nama.toLowerCase().includes(search) ||
+                p.kat.toLowerCase().includes(search)
+            );
+
+            tbody.innerHTML = filtered.map(p => {
+                let badge = p.keparahan === 'Ringan' ? 'bg-emerald-100 text-emerald-800' :
+                            p.keparahan === 'Sedang' ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800';
+
+                return `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-3 px-4 font-bold font-mono text-slate-800">${p.kode}</td>
+                        <td class="py-3 px-4 text-xs font-semibold text-slate-600">${p.kat}</td>
+                        <td class="py-3 px-4 font-medium text-slate-800">${p.nama}</td>
+                        <td class="py-3 px-4 text-center">
+                            <span class="text-[11px] font-bold px-2 py-0.5 rounded ${badge}">${p.keparahan}</span>
+                        </td>
+                        <td class="py-3 px-4 text-center font-extrabold text-rose-600">+${p.poin}</td>
+                        <td class="py-3 px-4 text-center">
+                            <button onclick="useKatalogInForm('${p.kode}')" class="px-2.5 py-1 bg-teal-600 hover:bg-teal-700 text-white font-bold text-[11px] rounded transition">
+                                Pilih
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function useKatalogInForm(kode) {
+            switchTab('input');
+            document.getElementById('field-katalog-select').value = kode;
+            onSelectKatalogItem();
+        }
+
+        // ==========================================
+        // MODUL 4: FORM INPUT KEJADIAN
+        // ==========================================
+        function handleFormSubmit(e) {
+            e.preventDefault();
+
+            const kodeKode = document.getElementById('field-katalog-select').value;
+            const katItem = MASTER_32_PELANGGARAN.find(p => p.kode === kodeKode);
+
+            const newCase = {
+                id: `K-${new Date().getFullYear()}-${String(casesData.length + 1).padStart(3, '0')}`,
+                waktu: document.getElementById('field-waktu').value,
+                kodePoin: katItem.kode,
+                jenis: katItem.nama,
+                kategori: katItem.kat,
+                poin: katItem.poin,
+                keparahan: katItem.keparahan,
+                lokasi: document.getElementById('field-lokasi').value,
+                pelakuNama: document.getElementById('field-pelaku-nama').value,
+                pelakuKelas: document.getElementById('field-pelaku-kelas').value,
+                pelakuNisn: document.getElementById('field-pelaku-nisn').value,
+                korbanNama: document.getElementById('field-korban-nama').value,
+                korbanKelas: document.getElementById('field-korban-kelas').value,
+                korbanKet: document.getElementById('field-korban-ket').value,
+                kronologi: document.getElementById('field-kronologi').value,
+                tindakan: document.getElementById('field-tindakan').value,
+                guru: document.getElementById('field-guru').value,
+                status: document.getElementById('field-status').value,
+                createdAt: new Date().toISOString()
+            };
+
+            casesData.unshift(newCase);
+            saveLocalData();
+
+            showToast(`Laporan disimpan! Akumulasi +${katItem.poin} poin untuk ${newCase.pelakuNama}`, 'success');
+            document.getElementById('form-kejadian').reset();
+            onSelectKatalogItem();
+            switchTab('data');
+        }
+
+        // ==========================================
+        // MODUL 5: DATA KASUS & TABLE
+        // ==========================================
+        function renderDataTable() {
+            const tbody = document.getElementById('table-body');
+            const emptyState = document.getElementById('table-empty');
+
+            const search = document.getElementById('search-input').value.toLowerCase();
+            const filterKeparahan = document.getElementById('filter-keparahan').value;
+            const filterStatus = document.getElementById('filter-status').value;
+
+            const filtered = casesData.filter(item => {
+                const matchSearch = item.pelakuNama.toLowerCase().includes(search) || 
+                                    item.pelakuKelas.toLowerCase().includes(search) || 
+                                    item.jenis.toLowerCase().includes(search) ||
+                                    item.id.toLowerCase().includes(search);
+                const matchKeparahan = filterKeparahan === 'ALL' || item.keparahan === filterKeparahan;
+                const matchStatus = filterStatus === 'ALL' || item.status === filterStatus;
+
+                return matchSearch && matchKeparahan && matchStatus;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            tbody.innerHTML = filtered.map(item => {
+                let badgeKeparahan = item.keparahan === 'Ringan' ? 'bg-emerald-100 text-emerald-800' :
+                                    item.keparahan === 'Sedang' ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800';
+
+                return `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-3 px-4 font-mono text-xs">
+                            <strong class="text-slate-800">${item.id}</strong>
+                            <div class="text-[10px] text-slate-500">${new Date(item.waktu).toLocaleString('id-ID')}</div>
+                        </td>
+                        <td class="py-3 px-4">
+                            <div class="font-bold text-slate-800">${escapeHtml(item.pelakuNama)}</div>
+                            <div class="text-xs text-slate-500">Kelas: ${escapeHtml(item.pelakuKelas)}</div>
+                        </td>
+                        <td class="py-3 px-4">
+                            <span class="text-xs font-semibold text-slate-800">${escapeHtml(item.jenis)}</span>
+                            <div class="text-[10px] text-slate-500 font-mono">${item.kodePoin || '-'} • ${item.kategori}</div>
+                        </td>
+                        <td class="py-3 px-4 text-center font-extrabold text-rose-600">+${item.poin || 0}</td>
+                        <td class="py-3 px-4 text-center">
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded ${badgeKeparahan}">${item.keparahan}</span>
+                        </td>
+                        <td class="py-3 px-4">
+                            <span class="bg-indigo-50 text-indigo-700 text-xs font-semibold px-2 py-1 rounded border border-indigo-200">${item.status}</span>
+                        </td>
+                        <td class="py-3 px-4 text-center">
+                            <div class="flex items-center justify-center gap-1">
+                                <button onclick="viewDetail('${item.id}')" title="Detail" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded"><i class="fa-solid fa-eye"></i></button>
+                                ${currentRole === 'admin' ? `
+                                    <button onclick="deleteCase('${item.id}')" title="Hapus" class="p-1.5 text-red-600 hover:bg-red-50 rounded"><i class="fa-solid fa-trash"></i></button>
+                                ` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // ==========================================
+        // MODUL 6: POIN KEBAIKAN
+        // ==========================================
+        function handleKebaikanSubmit(e) {
+            e.preventDefault();
+            const nama = document.getElementById('kebaikan-nama').value;
+            const kelas = document.getElementById('kebaikan-kelas').value;
+            const jenisSelect = document.getElementById('kebaikan-jenis').value;
+            const ket = document.getElementById('kebaikan-ket').value;
+
+            let reduksi = 10;
+            if (jenisSelect.includes('-25')) reduksi = 25;
+            else if (jenisSelect.includes('-15')) reduksi = 15;
+            else if (jenisSelect.includes('-20')) reduksi = 20;
+
+            const newKebaikan = {
+                tgl: new Date().toISOString().slice(0, 10),
+                nama, kelas, jenis: jenisSelect, reduksi, ket
+            };
+
+            kebaikanData.unshift(newKebaikan);
+            saveLocalData();
+
+            showToast(`Apresiasi diberikan! Poin ${nama} berkurang -${reduksi} poin.`, 'success');
+            document.getElementById('form-kebaikan').reset();
+            renderKebaikanTable();
+            renderDashboard();
+        }
+
+        function renderKebaikanTable() {
+            const tbody = document.getElementById('kebaikan-table-body');
+            tbody.innerHTML = kebaikanData.map(k => `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="py-2.5 px-3 font-mono text-slate-500">${k.tgl}</td>
+                    <td class="py-2.5 px-3 font-bold text-slate-800">${escapeHtml(k.nama)} (${escapeHtml(k.kelas)})</td>
+                    <td class="py-2.5 px-3">
+                        <strong class="text-pink-700 block text-xs">${escapeHtml(k.jenis)}</strong>
+                        <span class="text-[11px] text-slate-500">${escapeHtml(k.ket)}</span>
+                    </td>
+                    <td class="py-2.5 px-3 text-center font-extrabold text-emerald-600">-${k.reduksi} POIN</td>
+                </tr>
+            `).join('');
+        }
+
+        // ==========================================
+        // MODUL 7: CETAK SP & SURAT RESMI
+        // ==========================================
+        function populatePrintDropdown() {
+            const select = document.getElementById('select-kasus-print');
+            const students = calculateStudentAccumulatedPoints();
+
+            select.innerHTML = students.map(s => 
+                `<option value="${s.nama}">${s.nama} (${s.kelas}) - Akumulasi: ${s.totalPoin} Poin</option>`
+            ).join('');
+
+            loadPrintPreview();
+        }
+
+        function selectForPrintByStudent(nama) {
+            switchTab('surat');
+            document.getElementById('select-kasus-print').value = nama;
+            loadPrintPreview();
+        }
+
+        function loadPrintPreview() {
+            const selectedNama = document.getElementById('select-kasus-print').value;
+            const students = calculateStudentAccumulatedPoints();
+            const student = students.find(s => s.nama === selectedNama);
+            const container = document.getElementById('print-body-content');
+
+            if (!student) {
+                container.innerHTML = '<p class="text-center text-slate-400 py-8">Pilih murid untuk membuat Surat Peringatan.</p>';
+                return;
+            }
+
+            // Determine Sanction Threshold
+            let spTitle = "SURAT TEGURAN DISIPLIN SISWA";
+            let sanksiKet = "Teguran Lisan & Pembinaan Wali Kelas";
+            if (student.totalPoin >= 100) {
+                spTitle = "SURAT PERINGATAN KETIGA (SP-3) / DIKEMBALIKAN KE ORTU";
+                sanksiKet = "Dikembalikan Kepada Orang Tua / Skorsing Total";
+            } else if (student.totalPoin >= 75) {
+                spTitle = "SURAT PERINGATAN KETIGA (SP-3)";
+                sanksiKet = "Skorsing Akademik Selama 3 Hari & Perjanjian Bermeterai";
+            } else if (student.totalPoin >= 50) {
+                spTitle = "SURAT PERINGATAN KEDUA (SP-2) & PEMANGGILAN ORTU";
+                sanksiKet = "Pemanggilan Orang Tua / Wali Murid ke Bimbingan Konseling";
+            } else if (student.totalPoin >= 25) {
+                spTitle = "SURAT PERINGATAN PERTAMA (SP-1)";
+                sanksiKet = "Pembinaan Khusus BK & Surat Pernyataan Siswa";
+            }
+
+            document.getElementById('print-jenis-surat').innerText = spTitle;
+            document.getElementById('print-nomor-surat').innerText = `421.2/BK-SP/2026/${Math.floor(100 + Math.random() * 900)}`;
+            document.getElementById('print-tgl-surat').innerText = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+
+            const studentCases = casesData.filter(c => c.pelakuNama === student.nama);
+
+            container.innerHTML = `
+                <p>Menerangkan bahwa berdasarkan catatan ketertiban dan disiplin Bimbingan Konseling (BK), siswa dengan identitas di bawah ini:</p>
+                
+                <table class="w-full my-2 border-collapse text-xs">
+                    <tr class="border-b"><td class="py-1 font-bold w-36">Nama Siswa</td><td>: <strong>${escapeHtml(student.nama)}</strong></td></tr>
+                    <tr class="border-b"><td class="py-1 font-bold">Kelas / NISN</td><td>: ${escapeHtml(student.kelas)} / ${student.nisn}</td></tr>
+                    <tr class="border-b"><td class="py-1 font-bold">Total Akumulasi Poin</td><td>: <strong class="text-rose-700 font-extrabold">${student.totalPoin} POIN PELANGGARAN</strong></td></tr>
+                    <tr class="border-b"><td class="py-1 font-bold">Tindakan Sanksi BK</td><td>: <strong>${sanksiKet}</strong></td></tr>
+                </table>
+
+                <div class="mt-3">
+                    <h5 class="font-bold underline uppercase text-xs mb-1">Rincian Pelanggaran Tercatat:</h5>
+                    <ul class="list-disc pl-5 text-xs space-y-1">
+                        ${studentCases.map(c => `<li><strong>[${c.kodePoin || '-'}] ${c.jenis}</strong> (+${c.poin} Poin) - <em>${new Date(c.waktu).toLocaleDateString('id-ID')}</em></li>`).join('')}
+                    </ul>
+                </div>
+
+                <p class="mt-4 text-xs italic">
+                    Demikian surat ini dikeluarkan agar menjadi perhatian serius bagi siswa serta Orang Tua/Wali Murid demi kebaikan pembinaan karakter di lingkungan madrasah.
+                </p>
+            `;
+        }
+
+        // ==========================================
+        // MODUL 8 & ROLE MANAGEMENT
+        // ==========================================
+        function updateRoleBadgeUI() {
+            const badge = document.getElementById('current-role-badge');
+            const checkGuru = document.getElementById('role-check-guru');
+            const checkAdmin = document.getElementById('role-check-admin');
+
+            if (currentRole === 'admin') {
+                badge.className = "px-2.5 py-1 rounded text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30";
+                badge.innerHTML = `<i class="fa-solid fa-user-gear text-amber-400"></i> Peran: Admin / BK`;
+                if (checkAdmin) checkAdmin.classList.remove('hidden');
+                if (checkGuru) checkGuru.classList.add('hidden');
+            } else {
+                badge.className = "px-2.5 py-1 rounded text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30";
+                badge.innerHTML = `<i class="fa-solid fa-chalkboard-user text-emerald-400"></i> Peran: Guru`;
+                if (checkGuru) checkGuru.classList.remove('hidden');
+                if (checkAdmin) checkAdmin.classList.add('hidden');
+            }
+        }
+
+        function setRoleDirect(role) {
+            currentRole = role;
+            updateRoleBadgeUI();
+            renderDataTable();
+            showToast("Beralih ke Peran Guru Piket / Wali Kelas.", "info");
+        }
+
+        function openRoleModal() { document.getElementById('modal-role').classList.remove('hidden'); }
+        function closeRoleModal() { document.getElementById('modal-role').classList.add('hidden'); }
+
+        function confirmAdminRole() {
+            const pass = document.getElementById('input-admin-pass').value;
+            if (pass === 'Agam121') {
+                currentRole = 'admin';
+                closeRoleModal();
+                updateRoleBadgeUI();
+                renderDataTable();
+                showToast("Login Admin Berhasil! Hak Akses Penuh Aktif.", "success");
+            } else {
+                document.getElementById('pass-error').classList.remove('hidden');
+            }
+        }
+
+        function viewDetail(id) {
+            const item = casesData.find(c => c.id === id);
+            if (!item) return;
+
+            document.getElementById('detail-kode').innerText = `Detail Kasus: ${item.id}`;
+            document.getElementById('detail-content').innerHTML = `
+                <div class="bg-slate-50 p-3 rounded-lg border space-y-1">
+                    <p><strong>Nama Pelaku:</strong> ${escapeHtml(item.pelakuNama)} (${escapeHtml(item.pelakuKelas)})</p>
+                    <p><strong>Jenis Pelanggaran:</strong> ${escapeHtml(item.jenis)}</p>
+                    <p><strong>Poin Pelanggaran:</strong> <strong class="text-rose-600">+${item.poin} Poin</strong></p>
+                    <p><strong>Waktu & Lokasi:</strong> ${new Date(item.waktu).toLocaleString('id-ID')} @ ${escapeHtml(item.lokasi)}</p>
+                </div>
+                <p><strong>Kronologi:</strong><br>${escapeHtml(item.kronologi)}</p>
+                <p><strong>Tindakan Guru:</strong><br>${escapeHtml(item.tindakan)}</p>
+            `;
+            document.getElementById('modal-detail').classList.remove('hidden');
+        }
+
+        function closeDetailModal() { document.getElementById('modal-detail').classList.add('hidden'); }
+
+        function deleteCase(id) {
+            casesData = casesData.filter(c => c.id !== id);
+            saveLocalData();
+            renderDataTable();
+            renderDashboard();
+            showToast("Data kasus berhasil dihapus.", "info");
+        }
+
+        function openAppsScriptModal() { document.getElementById('modal-appsscript').classList.remove('hidden'); }
+        function closeAppsScriptModal() { document.getElementById('modal-appsscript').classList.add('hidden'); }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast-notif');
+            const msg = document.getElementById('toast-msg');
+            const icon = document.getElementById('toast-icon');
+
+            msg.innerText = message;
+            if (type === 'success') icon.className = "fa-solid fa-circle-check text-emerald-400 text-lg";
+            else if (type === 'error') icon.className = "fa-solid fa-circle-xmark text-rose-400 text-lg";
+            else icon.className = "fa-solid fa-circle-info text-blue-400 text-lg";
+
+            toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
